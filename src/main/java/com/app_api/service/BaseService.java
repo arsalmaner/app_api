@@ -1,24 +1,32 @@
 package com.app_api.service;
 
 import com.app_api.resource.entity.AuditInfo;
+import com.app_api.resource.entity.User;
+import com.app_api.util.CurrentUserHolder;
 
 import java.sql.Timestamp;
 
-public abstract class BaseService {
+public class BaseService {
 
-    public AuditInfo createAudit(Integer userId) {
+    protected User currentUser;
+
+    public BaseService(CurrentUserHolder currentUserHolder) {
+        currentUser = currentUserHolder.getCurrentUser();
+    }
+
+    public AuditInfo createAudit() {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         AuditInfo audit = new AuditInfo();
-        audit.setCreatedBy(userId);
-        audit.setUpdatedBy(userId);
+        audit.setCreatedBy(currentUser.getId());
+        audit.setUpdatedBy(currentUser.getId());
         audit.setCreatedAt(timestamp);
         audit.setUpdatedAt(timestamp);
         return audit;
     }
 
-    public AuditInfo updateAudit(Integer userId, AuditInfo audit) {
+    public AuditInfo updateAudit(AuditInfo audit) {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        audit.setUpdatedBy(userId);
+        audit.setUpdatedBy(currentUser.getId());
         audit.setUpdatedAt(timestamp);
         return audit;
     }

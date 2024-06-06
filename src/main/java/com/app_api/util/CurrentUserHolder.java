@@ -10,7 +10,7 @@ import java.security.Principal;
 public class CurrentUserHolder {
     private static final ThreadLocal<Principal> currentPrincipal = new ThreadLocal<>();
 
-    public Principal getCurrentPrincipal() {
+    private Principal getCurrentPrincipal() {
         return currentPrincipal.get();
     }
 

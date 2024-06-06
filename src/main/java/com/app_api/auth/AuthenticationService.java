@@ -11,7 +11,6 @@ import com.app_api.resource.entity.User;
 import com.app_api.resource.enums.TokenType;
 import com.app_api.resource.enums.UserRoleEnum;
 import com.app_api.util.CurrentUserHolder;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-@RequiredArgsConstructor
 public class AuthenticationService extends BaseService {
     private final UserRepository repository;
     private final TokenRepository tokenRepository;
@@ -29,7 +27,16 @@ public class AuthenticationService extends BaseService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final CurrentUserHolder currentUserHolder;
+
+    public AuthenticationService(CurrentUserHolder currentUserHolder, UserRepository repository, TokenRepository tokenRepository, UserRoleRepository userRoleRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager) {
+        super(currentUserHolder);
+        this.repository = repository;
+        this.tokenRepository = tokenRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -51,7 +58,7 @@ public class AuthenticationService extends BaseService {
             employer = whser;
         }*/
 
-        User whser = currentUserHolder.getCurrentUser();
+        User whser = currentUser;
 
         var user = User.builder()
                 .email(request.getEmail())
@@ -62,7 +69,7 @@ public class AuthenticationService extends BaseService {
                 //.employer(employer)
                 .depot(whser)
                 .phone(request.getPhone())
-                .auditInfo(createAudit(whser.getId()))
+                .auditInfo(createAudit())
                 .build();
 
         var savedUser = repository.save(user);
