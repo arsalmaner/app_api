@@ -4,12 +4,10 @@ import com.app_api.dto.request.ChangePasswordRequest;
 import com.app_api.dto.response.UserResponse;
 import com.app_api.resource.repo.TokenRepository;
 import com.app_api.resource.repo.UserRepository;
-import com.app_api.resource.repo.UserRoleRepository;
 import com.app_api.dto.request.UserRequest;
 import com.app_api.resource.entity.User;
 import com.app_api.resource.enums.UserRoleEnum;
 import com.app_api.util.CurrentUserHolder;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-@RequiredArgsConstructor
 public class UserService extends BaseService {
 
     private final UserRepository repo;
@@ -27,12 +24,17 @@ public class UserService extends BaseService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
-    private final CurrentUserHolder currentUserHolder;
+    public UserService(CurrentUserHolder currentUserHolder, UserRepository repo, TokenRepository tokenRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper) {
+        super(currentUserHolder);
+        this.repo = repo;
+        this.tokenRepository = tokenRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.modelMapper = modelMapper;
+    }
 
     public void changePassword(ChangePasswordRequest request) {
-        User user = currentUserHolder.getCurrentUser();
 
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), currentUser.getPassword())) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_ACCEPTABLE, "Wrong password");
         }
@@ -40,16 +42,16 @@ public class UserService extends BaseService {
             throw new ResponseStatusException(
                     HttpStatus.NOT_ACCEPTABLE, "Password are not the same");
         }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setAuditInfo(updateAudit(user.getId(), user.getAuditInfo()));
-        repo.save(user);
+        currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        currentUser.setAuditInfo(updateAudit(currentUser.getAuditInfo()));
+        repo.save(currentUser);
     }
 
     public void changeActive(Integer id, boolean status) {
         User user = repo.findById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_ACCEPTABLE, "Can't find user"));
         user.setActive(status);
-        user.setAuditInfo(updateAudit(user.getId(), user.getAuditInfo()));
+        user.setAuditInfo(updateAudit(user.getAuditInfo()));
         repo.save(user);
         if (!status) {
             revokeAllUserTokens(user);
@@ -68,28 +70,26 @@ public class UserService extends BaseService {
     }
 
     public void updateUser(UserRequest userRequest) {
-        User user = currentUserHolder.getCurrentUser();
-        user.setName(userRequest.getName());
-        user.setPhone(userRequest.getPhone());
+        currentUser.setName(userRequest.getName());
+        currentUser.setPhone(userRequest.getPhone());
 
-        user.setCompanyName(userRequest.getCompanyName());
-        user.setStreet1(userRequest.getStreet1());
-        user.setStreet2(userRequest.getStreet2());
-        user.setCity(userRequest.getCity());
-        user.setState(userRequest.getState());
-        user.setZipCode(userRequest.getZipCode());
+        currentUser.setCompanyName(userRequest.getCompanyName());
+        currentUser.setStreet1(userRequest.getStreet1());
+        currentUser.setStreet2(userRequest.getStreet2());
+        currentUser.setCity(userRequest.getCity());
+        currentUser.setState(userRequest.getState());
+        currentUser.setZipCode(userRequest.getZipCode());
 
-        user.setAuditInfo(updateAudit(user.getId(), user.getAuditInfo()));
-        repo.save(user);
+        currentUser.setAuditInfo(updateAudit(currentUser.getAuditInfo()));
+        repo.save(currentUser);
     }
 
     public UserResponse getUserDetail() {
-        User user = currentUserHolder.getCurrentUser();
-        UserResponse userResponse = modelMapper.map(user, UserResponse.class);
-        if (user.getRole().getValue().equals(UserRoleEnum.whser)
-                || user.getRole().getValue().equals(UserRoleEnum.whserEmp)) {
-            if (user.getRole().getValue().equals(UserRoleEnum.whserEmp)) {
-                user = user.getEmployer();
+        UserResponse userResponse = modelMapper.map(currentUser, UserResponse.class);
+        if (currentUser.getRole().getValue().equals(UserRoleEnum.whser)
+                || currentUser.getRole().getValue().equals(UserRoleEnum.whserEmp)) {
+            if (currentUser.getRole().getValue().equals(UserRoleEnum.whserEmp)) {
+                currentUser = currentUser.getEmployer();
             }
             //userResponse.setCountryWhser(fetchCountryWhser(user));
         }

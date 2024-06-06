@@ -1,6 +1,7 @@
 package com.app_api.config;
 
 import com.app_api.util.CurrentUserHolder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.Filter;
@@ -14,13 +15,10 @@ import java.io.IOException;
 import java.security.Principal;
 
 @Component
+@RequiredArgsConstructor
 public class CurrentUserFilter implements Filter {
 
     private final CurrentUserHolder currentUserHolder;
-
-    public CurrentUserFilter(CurrentUserHolder currentUserHolder) {
-        this.currentUserHolder = currentUserHolder;
-    }
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {

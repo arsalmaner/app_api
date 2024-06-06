@@ -2,6 +2,7 @@ package com.app_api.resource.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -15,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "user")
+@EntityListeners(AuditingEntityListener.class)
 public class User implements UserDetails {
     @Id
     @Column(name = "id", nullable = false)
